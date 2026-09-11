@@ -8,7 +8,7 @@ const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({ message: "API activa" });
+  res.json({ message: "API activa pero local" });
 });
 
 app.use("/users", usersRouter);
