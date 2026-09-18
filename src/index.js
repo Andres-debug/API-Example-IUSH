@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import authRouter from "./routes/auth.routes.js";
 import usersRouter from "./routes/users.routes.js";
 
 const app = express();
@@ -11,6 +12,7 @@ app.get("/", (req, res) => {
   res.json({ message: "API activa pero local desde el remoto" });
 });
 
+app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 
 app.use((req, res) => {

@@ -1,5 +1,14 @@
 import prisma from "../lib/prisma.js";
 
+const safeUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
 export async function createUser(req, res, next) {
   try {
     const { name, email } = req.body;
@@ -10,6 +19,7 @@ export async function createUser(req, res, next) {
 
     const user = await prisma.user.create({
       data: { name, email },
+      select: safeUserSelect,
     });
 
     return res.status(201).json(user);
@@ -24,6 +34,7 @@ export async function createUser(req, res, next) {
 export async function getUsers(req, res, next) {
   try {
     const users = await prisma.user.findMany({
+      select: safeUserSelect,
       orderBy: { id: "asc" },
     });
 
@@ -47,7 +58,8 @@ export async function getUserById(req, res, next) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    return res.json(user);
+    const { password, ...safeUser } = user;
+    return res.json(safeUser);
   } catch (error) {
     return next(error);
   }
@@ -77,6 +89,7 @@ export async function updateUser(req, res, next) {
         ...(name ? { name } : {}),
         ...(email ? { email } : {}),
       },
+      select: safeUserSelect,
     });
 
     return res.json(user);
