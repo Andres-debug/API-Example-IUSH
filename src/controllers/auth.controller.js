@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
+import { sendWelcomeEmail } from "../lib/mailer.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
@@ -8,6 +9,26 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 function sanitizeUser(user) {
   const { password, ...safeUser } = user;
   return safeUser;
+}
+
+export async function welcomeEmail(req, res, next) {
+  try {
+    const { name, email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "El email es obligatorio" });
+    }
+
+    const info = await sendWelcomeEmail({ name, email });
+
+    return res.status(200).json({
+      message: "Correo de bienvenida enviado",
+      messageId: info.messageId,
+      previewUrl: info.previewUrl,
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 export async function register(req, res, next) {
@@ -37,6 +58,17 @@ export async function register(req, res, next) {
         role: "USER",
       },
     });
+
+    try {
+      const info = await sendWelcomeEmail({
+        name: user.name,
+        email: user.email,
+      });
+
+      console.log("📧 Correo de bienvenida enviado:", info.previewUrl);
+    } catch (mailError) {
+      console.warn("⚠️ No se pudo enviar el correo de bienvenida:", mailError.message);
+    }
 
     return res.status(201).json({
       message: "Usuario registrado",
